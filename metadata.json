@@ -1,0 +1,40 @@
+{
+  "name": "puppet-module-nfsclient",
+  "version": "0.1.0",
+  "author": "emahags",
+  "summary": "Manage nfs client",
+  "license": "Apache-2.0",
+  "source": "git://github.com/emahags/puppet-module-nfsclient.git",
+  "project_page": "https://github.com/emahags/puppet-module-nfsclient",
+  "issues_url": "https://github.com/emahags/puppet-module-nfsclient/issues",
+  "description": "Manage nfs client",
+  "requirements": [
+    {
+      "name": "pe",
+      "version_requirement": ">= 3.0.0 < 5.0.0"
+    },
+    {
+      "name": "puppet",
+      "version_requirement": ">= 3.0.0 < 5.0.0"
+    }
+  ],
+  "operatingsystem_support": [
+    {
+      "operatingsystem": "Suse",
+      "operatingsystemrelease": [
+        "11",
+        "12"
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "name": "puppetlabs/stdlib",
+      "version_requirement": ">= 4.6.0 < 6.0.0"
+    },
+    {
+      "name": "ghoneycutt/rpcbind",
+      "version_requirement": ">= 1.4.0"
+    }
+  ]
+}
