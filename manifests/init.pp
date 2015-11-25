@@ -60,7 +60,9 @@ class nfsclient (
               enable => true,
             }
             File_line[NFS_SECURITY_GSS] ~> Service[nfs]
-            File_line[GSSD_OPTIONS] ~> Service[nfs]
+            if $keytab {
+              File_line[GSSD_OPTIONS] ~> Service[nfs]
+            }
           }
         }
         default: {
