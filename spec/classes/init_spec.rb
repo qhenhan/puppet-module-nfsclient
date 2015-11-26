@@ -1,32 +1,62 @@
 require 'spec_helper'
 describe 'nfsclient' do
+  let :facts do
+    {}
+  end
 
-  context 'nfsclient_config' do
-    let :facts do
-      {
-        'osfamily'          => 'Suse',
-        'lsbmajdistrelease' => '11',
-      }
-    end
+  let :params do
+    {}
+  end
 
     let :params do
       {}
     end
 
-    it 'should not do anything by default' do
-      should compile
-      should have_resource_count(0)
-    end
+  context 'generic config' do
+    on_supported_os.each do |os, facts|
+      context "on os #{os}" do
 
-    it 'should configure gss if specified' do
-      params.merge!({'gss' => true})
-      should contain_file_line('NFS_SECURITY_GSS').with(
+        let(:facts) do
+          facts
+        end
+
+        it 'should not do anything by default' do
+          should compile
+          should have_resource_count(0)
+        end
+
+        it 'should configure gss if specified' do
+          params.merge!({'gss' => true})
+          should contain_file_line('NFS_SECURITY_GSS').with(
+          {
+            'path' => '/etc/sysconfig/nfs',
+            'line' => 'NFS_SECURITY_GSS="yes"',
+            'match' => '^NFS_SECURITY_GSS=.*',
+            'notify' => 'Service[rpcbind_service]',
+          })
+        end
+
+        it 'should configure keytab if specified' do
+          params.merge!({'gss' => true, 'keytab' => '/etc/keytab'})
+          should contain_file_line('GSSD_OPTIONS').with(
+          {
+            'path' => '/etc/sysconfig/nfs',
+            'line' => 'GSSD_OPTIONS="-k /etc/keytab"',
+            'match' => '^GSSD_OPTIONS=.*',
+          })
+          should contain_file_line('GSSD_OPTIONS').that_notifies('Service[rpcbind_service]')
+        end
+
+      end
+    end
+  end
+
+  context 'specific config for SLES 11' do
+    let :facts do
       {
-        'path' => '/etc/sysconfig/nfs',
-        'line' => 'NFS_SECURITY_GSS="yes"',
-        'match' => '^NFS_SECURITY_GSS=.*',
-        'notify' => 'Service[rpcbind_service]',
-      })
+        'osfamily'          => 'Suse',
+        'lsbmajdistrelease' => '11',
+      }
     end
 
     it 'should configure gssd and idmapd on SUSE 11' do
@@ -59,28 +89,18 @@ describe 'nfsclient' do
         'refreshonly' => true,
       })
     end
+  end
 
-    it 'should configure keytab on SUSE 11' do
-      params.merge!({'gss' => true, 'keytab' => '/etc/keytab'})
-      should contain_file_line('GSSD_OPTIONS').with(
+  context 'specific config for SLES 12' do
+    let :facts do
       {
-        'path' => '/etc/sysconfig/nfs',
-        'line' => 'GSSD_OPTIONS="-k /etc/keytab"',
-        'match' => '^GSSD_OPTIONS=.*',
-      })
-      should contain_file_line('GSSD_OPTIONS').that_notifies('Service[rpcbind_service]')
+        'osfamily'          => 'Suse',
+        'lsbmajdistrelease' => '12',
+      }
     end
 
     it 'should configure keytab on SUSE 12' do
       params.merge!({'gss' => true, 'keytab' => '/etc/keytab'})
-      facts.merge!('lsbmajdistrelease' => '12')
-      should contain_file_line('GSSD_OPTIONS').with(
-      {
-        'path' => '/etc/sysconfig/nfs',
-        'line' => 'GSSD_OPTIONS="-k /etc/keytab"',
-        'match' => '^GSSD_OPTIONS=.*',
-      })
-      should contain_file_line('GSSD_OPTIONS').that_notifies('Service[rpcbind_service]')
       should contain_file_line('GSSD_OPTIONS').that_notifies('Service[nfs]')
     end
 
@@ -93,6 +113,13 @@ describe 'nfsclient' do
         'enable' => 'true',
       })
       should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[nfs]')
+    end
+  end
+
+  context 'on unsupported os' do
+    it 'should fail gracefully' do
+      facts.merge!('osfamily' => 'UNSUPPORTED')
+      should compile.and_raise_error(/nfsclient module only supports Suse. <UNSUPPORTED> was detected./)
     end
   end
 end
