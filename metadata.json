@@ -25,6 +25,12 @@
         "11",
         "12"
       ]
+    },
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "6"
+      ]
     }
   ],
   "dependencies": [

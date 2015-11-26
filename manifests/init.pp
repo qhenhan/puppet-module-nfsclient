@@ -4,27 +4,20 @@ class nfsclient (
 ) {
 
   case $::osfamily {
+    'RedHat': {
+      $gss_line = 'SECURE_NFS'
+      $keytab_line = 'RPCGSSDARGS'
+      if $gss {
+        service { 'rpcgssd':
+          ensure => 'running',
+          enable => true,
+        }
+        File_line['NFS_SECURITY_GSS'] ~> Service['rpcgssd']
+      }
+    }
     'Suse': {
-        if $gss {
-          include rpcbind
-
-          file_line { 'NFS_SECURITY_GSS':
-            path   => '/etc/sysconfig/nfs',
-            line   => 'NFS_SECURITY_GSS="yes"',
-            match  => '^NFS_SECURITY_GSS=.*',
-            notify => Service[rpcbind_service],
-          }
-        }
-        if $keytab {
-          file_line { 'GSSD_OPTIONS':
-            path  => '/etc/sysconfig/nfs',
-            line  => "GSSD_OPTIONS=\"-k ${keytab}\"",
-            match => '^GSSD_OPTIONS=.*',
-          }
-          if $gss {
-            File_line[GSSD_OPTIONS] ~> Service[rpcbind_service]
-          }
-        }
+      $gss_line = 'NFS_SECURITY_GSS'
+      $keytab_line = 'GSSD_OPTIONS'
       case $::lsbmajdistrelease {
         '11': {
           if $gss {
@@ -72,6 +65,27 @@ class nfsclient (
     }
     default: {
       fail("nfsclient module only supports Suse. <${::osfamily}> was detected.")
+    }
+  }
+
+  if $gss {
+    include rpcbind
+
+    file_line { 'NFS_SECURITY_GSS':
+      path   => '/etc/sysconfig/nfs',
+      line   => "${gss_line}=\"yes\"",
+      match  => "^${gss_line}=.*",
+      notify => Service[rpcbind_service],
+    }
+  }
+  if $keytab {
+    file_line { 'GSSD_OPTIONS':
+      path  => '/etc/sysconfig/nfs',
+      line  => "${keytab_line}=\"-k ${keytab}\"",
+      match => "^${keytab_line}=.*",
+    }
+    if $gss {
+      File_line[GSSD_OPTIONS] ~> Service[rpcbind_service]
     }
   }
 }

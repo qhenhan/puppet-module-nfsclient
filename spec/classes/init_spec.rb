@@ -8,9 +8,20 @@ describe 'nfsclient' do
     {}
   end
 
-    let :params do
-      {}
-    end
+  let :options do
+    {
+      'gss' =>
+        {
+          'RedHat' => 'SECURE_NFS',
+          'Suse' => 'NFS_SECURITY_GSS',
+        },
+      'keytab' =>
+        {
+          'RedHat' => 'RPCGSSDARGS',
+          'Suse' => 'GSSD_OPTIONS',
+        },
+    }
+  end
 
   context 'generic config' do
     on_supported_os.each do |os, facts|
@@ -30,10 +41,10 @@ describe 'nfsclient' do
           should contain_file_line('NFS_SECURITY_GSS').with(
           {
             'path' => '/etc/sysconfig/nfs',
-            'line' => 'NFS_SECURITY_GSS="yes"',
-            'match' => '^NFS_SECURITY_GSS=.*',
-            'notify' => 'Service[rpcbind_service]',
+            'line' => "#{options['gss'][facts[:osfamily]]}=\"yes\"",
+            'match' => "^#{options['gss'][facts[:osfamily]]}=.*",
           })
+          should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcbind_service]')
         end
 
         it 'should configure keytab if specified' do
@@ -41,8 +52,8 @@ describe 'nfsclient' do
           should contain_file_line('GSSD_OPTIONS').with(
           {
             'path' => '/etc/sysconfig/nfs',
-            'line' => 'GSSD_OPTIONS="-k /etc/keytab"',
-            'match' => '^GSSD_OPTIONS=.*',
+            'line' => "#{options['keytab'][facts[:osfamily]]}=\"-k /etc/keytab\"",
+            'match' => "^#{options['keytab'][facts[:osfamily]]}=.*",
           })
           should contain_file_line('GSSD_OPTIONS').that_notifies('Service[rpcbind_service]')
         end
@@ -113,6 +124,24 @@ describe 'nfsclient' do
         'enable' => 'true',
       })
       should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[nfs]')
+    end
+  end
+
+  context 'specific config for RHEL' do
+    let :facts do
+      {
+        'osfamily'          => 'RedHat',
+      }
+    end
+
+    it 'should manage rpcgssd' do
+      params.merge!({'gss' => true})
+      should contain_service('rpcgssd').with(
+      {
+        'ensure' => 'running',
+        'enable' => true,
+      })
+      should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcgssd]')
     end
   end
 
