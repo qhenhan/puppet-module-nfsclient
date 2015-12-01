@@ -30,6 +30,8 @@ describe 'nfsclient' do
         let(:facts) do
           facts
         end
+        # lsbmajdistrelease does not exist in facterdb 0.3.0
+        facts.merge!({:lsbmajdistrelease => facts[:operatingsystemrelease].split('.')[0]})
 
         it 'should not do anything by default' do
           should compile
@@ -67,8 +69,9 @@ describe 'nfsclient' do
   context 'specific config for SLES 11' do
     let :facts do
       {
-        'osfamily'          => 'Suse',
-        'lsbmajdistrelease' => '11',
+        'osfamily'               => 'Suse',
+        'lsbmajdistrelease'      => '11',
+        'operatingsystemrelease' => '11.0',
       }
     end
 
@@ -108,8 +111,9 @@ describe 'nfsclient' do
   context 'specific config for SLES 12' do
     let :facts do
       {
-        'osfamily'          => 'Suse',
-        'lsbmajdistrelease' => '12',
+        'osfamily'               => 'Suse',
+        'lsbmajdistrelease'      => '12',
+        'operatingsystemrelease' => '12',
       }
     end
 

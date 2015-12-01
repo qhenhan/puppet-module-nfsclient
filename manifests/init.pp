@@ -18,8 +18,8 @@ class nfsclient (
     'Suse': {
       $gss_line = 'NFS_SECURITY_GSS'
       $keytab_line = 'GSSD_OPTIONS'
-      case $::lsbmajdistrelease {
-        '11': {
+      case $::operatingsystemrelease {
+        /^11/: {
           if $gss {
             file_line { 'NFS_START_SERVICES':
               match  => '^NFS_START_SERVICES=',
@@ -47,7 +47,7 @@ class nfsclient (
             }
           }
         }
-        '12': {
+        /^12/: {
           if $gss {
             service { 'nfs':
               ensure  => 'running',
@@ -61,7 +61,7 @@ class nfsclient (
           }
         }
         default: {
-          fail("nfsclient module only supports Suse versions 11 and 12. <${::lsbmajdistrelease}> was detected.")
+          fail("nfsclient module only supports Suse versions 11 and 12. <${::operatingsystemrelease}> was detected.")
         }
       }
     }
