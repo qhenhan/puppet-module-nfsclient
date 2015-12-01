@@ -52,9 +52,9 @@ class nfsclient (
               ensure => 'running',
               enable => true,
             }
-            File_line[NFS_SECURITY_GSS] ~> Service[nfs]
+            File_line['NFS_SECURITY_GSS'] ~> Service['nfs']
             if $keytab {
-              File_line[GSSD_OPTIONS] ~> Service[nfs]
+              File_line['GSSD_OPTIONS'] ~> Service['nfs']
             }
           }
         }
@@ -85,7 +85,7 @@ class nfsclient (
       match => "^${keytab_line}=.*",
     }
     if $gss {
-      File_line[GSSD_OPTIONS] ~> Service[rpcbind_service]
+      File_line['GSSD_OPTIONS'] ~> Service['rpcbind_service']
     }
   }
 }
