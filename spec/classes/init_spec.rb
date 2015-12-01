@@ -45,6 +45,7 @@ describe 'nfsclient' do
             'match' => "^#{options['gss'][facts[:osfamily]]}=.*",
           })
           should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcbind_service]')
+          should contain_class('rpcbind')
         end
 
         it 'should configure keytab if specified' do
