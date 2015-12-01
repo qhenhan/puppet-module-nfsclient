@@ -46,6 +46,7 @@ describe 'nfsclient' do
           })
           should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcbind_service]')
           should contain_class('rpcbind')
+          should contain_class('nfs::idmap')
         end
 
         it 'should configure keytab if specified' do
@@ -100,6 +101,7 @@ describe 'nfsclient' do
         'path' => '/sbin',
         'refreshonly' => true,
       })
+      should contain_exec('nfs-force-start').that_requires('File[idmapd_conf]')
     end
   end
 
@@ -125,13 +127,15 @@ describe 'nfsclient' do
         'enable' => 'true',
       })
       should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[nfs]')
+      should contain_service('nfs').that_requires('File[idmapd_conf]')
     end
   end
 
   context 'specific config for RHEL' do
     let :facts do
       {
-        'osfamily'          => 'RedHat',
+        'osfamily'                  => 'RedHat',
+        'operatingsystemmajrelease' => '7',
       }
     end
 

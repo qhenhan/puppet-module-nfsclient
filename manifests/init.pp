@@ -43,14 +43,16 @@ class nfsclient (
               command     => 'service nfs force-start',
               path        => '/sbin',
               refreshonly => true,
+              require     => File['idmapd_conf'],
             }
           }
         }
         '12': {
           if $gss {
             service { 'nfs':
-              ensure => 'running',
-              enable => true,
+              ensure  => 'running',
+              enable  => true,
+              require => File['idmapd_conf'],
             }
             File_line['NFS_SECURITY_GSS'] ~> Service['nfs']
             if $keytab {
@@ -70,6 +72,7 @@ class nfsclient (
 
   if $gss {
     include rpcbind
+    include nfs::idmap
 
     file_line { 'NFS_SECURITY_GSS':
       path   => '/etc/sysconfig/nfs',
