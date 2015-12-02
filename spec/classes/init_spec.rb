@@ -139,7 +139,7 @@ describe 'nfsclient' do
     let :facts do
       {
         'osfamily'                  => 'RedHat',
-        'operatingsystemmajrelease' => '7',
+        'operatingsystemmajrelease' => '6',
       }
     end
 
@@ -151,6 +151,38 @@ describe 'nfsclient' do
         'enable' => true,
       })
       should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcgssd]')
+    end
+  end
+
+  context 'specific config for RHEL 7' do
+    let :facts do
+      {
+        'osfamily'                  => 'RedHat',
+        'operatingsystemrelease'    => '7.2',
+        'operatingsystemmajrelease' => '7',
+      }
+    end
+
+    it 'should manage keytab' do
+      params.merge!({'gss' => true, 'keytab' => '/etc/keytab'})
+      should contain_file_line('rpc-gss.service').with(
+      {
+        'match' => '^ConditionPathExists=',
+        'line' => 'ConditionPathExists=/etc/keytab',
+      })
+      should contain_exec('daemon-reload').with(
+      {
+        'command' => 'systemctl daemon-reload',
+        'refreshonly' => true,
+      })
+      should contain_exec('nfs-config').with(
+      {
+        'command' => 'systemctl restart nfs-config',
+        'refreshonly' => true,
+      })
+      should contain_file_line('rpc-gss.service').that_notifies('Exec[daemon-reload]')
+      should contain_Service('rpcgssd').that_subscribes_to('Exec[daemon-reload]')
+      should contain_Service('rpcgssd').that_subscribes_to('Exec[nfs-config]')
     end
   end
 

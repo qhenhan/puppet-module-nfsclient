@@ -14,6 +14,33 @@ class nfsclient (
         }
         File_line['NFS_SECURITY_GSS'] ~> Service['rpcgssd']
       }
+      case $::operatingsystemrelease {
+        /^7/: {
+          if $keytab {
+            file_line { 'rpc-gss.service':
+              match  => '^ConditionPathExists=',
+              path   => '/usr/lib/systemd/system/rpc-gssd.service',
+              line   => "ConditionPathExists=${keytab}",
+              notify => Exec['daemon-reload'],
+            }
+            exec { 'daemon-reload':
+              command     => 'systemctl daemon-reload',
+              path        => '/usr/bin',
+              refreshonly => true,
+            }
+            exec { 'nfs-config':
+              command     => 'systemctl restart nfs-config',
+              path        => '/usr/bin',
+              refreshonly => true,
+              require     => File_line['GSSD_OPTIONS'],
+            }
+            if $gss {
+              Exec['daemon-reload'] ~> Service['rpcgssd']
+              Exec['nfs-config'] ~> Service['rpcgssd']
+            }
+          }
+        }
+      }
     }
     'Suse': {
       $gss_line = 'NFS_SECURITY_GSS'
