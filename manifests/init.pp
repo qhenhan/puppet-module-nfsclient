@@ -5,15 +5,9 @@ class nfsclient (
 
   case $::osfamily {
     'RedHat': {
-      $gss_line = 'SECURE_NFS'
+      $gss_line    = 'SECURE_NFS'
       $keytab_line = 'RPCGSSDARGS'
-      if $gss {
-        service { 'rpcgssd':
-          ensure => 'running',
-          enable => true,
-        }
-        File_line['NFS_SECURITY_GSS'] ~> Service['rpcgssd']
-      }
+      $service     = 'rpcgssd'
       case $::operatingsystemrelease {
         /^7/: {
           if $keytab {
@@ -43,16 +37,17 @@ class nfsclient (
       }
     }
     'Suse': {
-      $gss_line = 'NFS_SECURITY_GSS'
+      $gss_line    = 'NFS_SECURITY_GSS'
       $keytab_line = 'GSSD_OPTIONS'
+      $service     = 'nfs'
       case $::operatingsystemrelease {
         /^11/: {
           if $gss {
             file_line { 'NFS_START_SERVICES':
               match  => '^NFS_START_SERVICES=',
               path   => '/etc/sysconfig/nfs',
-              line   => 'NFS_START_SERVICES="gssd,idmapd"',
-              notify => [ Exec[nfs-force-start], Service[rpcbind_service], ],
+              line   => 'NFS_START_SERVICES="yes"',
+              notify => [ Service[nfs], Service[rpcbind_service], ],
             }
             file_line { 'MODULES_LOADED_ON_BOOT':
               match  => '^MODULES_LOADED_ON_BOOT=',
@@ -66,34 +61,12 @@ class nfsclient (
               path        => '/sbin:/usr/bin',
               refreshonly => true,
             }
-            exec { 'nfs-force-start':
-              command     => 'service nfs force-start',
-              path        => '/sbin',
-              refreshonly => true,
-              require     => File['idmapd_conf'],
-            }
           }
-        }
-        /^12/: {
-          if $gss {
-            service { 'nfs':
-              ensure  => 'running',
-              enable  => true,
-              require => File['idmapd_conf'],
-            }
-            File_line['NFS_SECURITY_GSS'] ~> Service['nfs']
-            if $keytab {
-              File_line['GSSD_OPTIONS'] ~> Service['nfs']
-            }
-          }
-        }
-        default: {
-          fail("nfsclient module only supports Suse versions 11 and 12. <${::operatingsystemrelease}> was detected.")
         }
       }
     }
     default: {
-      fail("nfsclient module only supports Suse. <${::osfamily}> was detected.")
+      fail("nfsclient module only supports Suse and RedHat. <${::osfamily}> was detected.")
     }
   }
 
@@ -106,6 +79,13 @@ class nfsclient (
       line   => "${gss_line}=\"yes\"",
       match  => "^${gss_line}=.*",
       notify => Service[rpcbind_service],
+    }
+
+    service { $service:
+      ensure    => 'running',
+      enable    => true,
+      subscribe => [ File_line['NFS_SECURITY_GSS'], File_line['GSSD_OPTIONS'], ],
+      require   => File['idmapd_conf'],
     }
   }
   if $keytab {

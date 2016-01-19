@@ -80,9 +80,9 @@ describe 'nfsclient' do
       should contain_file_line('NFS_START_SERVICES').with(
       {
         'path' => '/etc/sysconfig/nfs',
-        'line' => 'NFS_START_SERVICES="gssd,idmapd"',
+        'line' => 'NFS_START_SERVICES="yes"',
         'match' => '^NFS_START_SERVICES=',
-        'notify' => ['Exec[nfs-force-start]', 'Service[rpcbind_service]'],
+        'notify' => ['Service[nfs]', 'Service[rpcbind_service]'],
       })
       should contain_file_line('MODULES_LOADED_ON_BOOT').with(
       {
@@ -98,13 +98,22 @@ describe 'nfsclient' do
         'path' => '/sbin:/usr/bin',
         'refreshonly' => true,
       })
-      should contain_exec('nfs-force-start').with(
+    end
+
+    it 'should configure keytab on SUSE 11' do
+      params.merge!({'gss' => true, 'keytab' => '/etc/keytab'})
+      should contain_file_line('GSSD_OPTIONS').that_notifies('Service[nfs]')
+    end
+
+    it 'should manage nfs on SUSE 11' do
+      params.merge!({'gss' => true})
+      should contain_service('nfs').with(
       {
-        'command' => 'service nfs force-start',
-        'path' => '/sbin',
-        'refreshonly' => true,
+        'ensure'  => 'running',
+        'enable'  => 'true',
       })
-      should contain_exec('nfs-force-start').that_requires('File[idmapd_conf]')
+      should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[nfs]')
+      should contain_service('nfs').that_requires('File[idmapd_conf]')
     end
   end
 
@@ -189,7 +198,7 @@ describe 'nfsclient' do
   context 'on unsupported os' do
     it 'should fail gracefully' do
       facts.merge!('osfamily' => 'UNSUPPORTED')
-      should compile.and_raise_error(/nfsclient module only supports Suse. <UNSUPPORTED> was detected./)
+      should compile.and_raise_error(/nfsclient module only supports Suse and RedHat. <UNSUPPORTED> was detected./)
     end
   end
 end
