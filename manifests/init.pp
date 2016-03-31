@@ -31,7 +31,7 @@ class nfsclient (
             file_line { 'NFS_START_SERVICES':
               match  => '^NFS_START_SERVICES=',
               path   => '/etc/sysconfig/nfs',
-              line   => 'NFS_START_SERVICES="gssd,idmapd"',
+              line   => 'NFS_START_SERVICES="yes"',
               notify => [ Exec[nfs-force-start], Service[rpcbind_service], ],
             }
             file_line { 'MODULES_LOADED_ON_BOOT':

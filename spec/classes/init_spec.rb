@@ -64,7 +64,7 @@ describe 'nfsclient' do
       should contain_file_line('NFS_START_SERVICES').with(
       {
         'path' => '/etc/sysconfig/nfs',
-        'line' => 'NFS_START_SERVICES="gssd,idmapd"',
+        'line' => 'NFS_START_SERVICES="yes"',
         'match' => '^NFS_START_SERVICES=',
         'notify' => ['Exec[nfs-force-start]', 'Service[rpcbind_service]'],
       })
