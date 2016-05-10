@@ -11,26 +11,19 @@ class nfsclient (
       case $::operatingsystemrelease {
         /^7/: {
           if $keytab {
-            file_line { 'rpc-gss.service':
-              match  => '^ConditionPathExists=',
-              path   => '/usr/lib/systemd/system/rpc-gssd.service',
-              line   => "ConditionPathExists=${keytab}",
-              notify => Exec['daemon-reload'],
+            service { 'nfs-config':
+              ensure    => 'running',
+              enable    => true,
+              subscribe => File_line['GSSD_OPTIONS'],
             }
-            exec { 'daemon-reload':
-              command     => 'systemctl daemon-reload',
-              path        => '/usr/bin',
-              refreshonly => true,
-            }
-            exec { 'nfs-config':
-              command     => 'systemctl restart nfs-config',
-              path        => '/usr/bin',
-              refreshonly => true,
-              require     => File_line['GSSD_OPTIONS'],
+            file { '/etc/krb5.keytab':
+              ensure => 'symlink',
+              target => '/etc/opt/quest/vas/host.keytab',
+              notify => Service['rpcgssd'],
             }
             if $gss {
-              Exec['daemon-reload'] ~> Service['rpcgssd']
-              Exec['nfs-config'] ~> Service['rpcgssd']
+              Service['nfs-config'] ~> Service['rpcgssd']
+              Service['rpcbind_service'] -> Service['rpcgssd']
             }
           }
         }
@@ -85,7 +78,7 @@ class nfsclient (
       ensure    => 'running',
       enable    => true,
       subscribe => [ File_line['NFS_SECURITY_GSS'], File_line['GSSD_OPTIONS'], ],
-      require   => File['idmapd_conf'],
+      require   => Service['idmapd_service'],
     }
   }
   if $keytab {
