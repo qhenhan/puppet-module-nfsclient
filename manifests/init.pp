@@ -8,23 +8,21 @@ class nfsclient (
       $gss_line    = 'SECURE_NFS'
       $keytab_line = 'RPCGSSDARGS'
       $service     = 'rpcgssd'
-      case $::operatingsystemrelease {
-        /^7/: {
-          if $keytab {
-            service { 'nfs-config':
-              ensure    => 'running',
-              enable    => true,
-              subscribe => File_line['GSSD_OPTIONS'],
-            }
-            file { '/etc/krb5.keytab':
-              ensure => 'symlink',
-              target => '/etc/opt/quest/vas/host.keytab',
-              notify => Service['rpcgssd'],
-            }
-            if $gss {
-              Service['nfs-config'] ~> Service['rpcgssd']
-              Service['rpcbind_service'] -> Service['rpcgssd']
-            }
+      if $::operatingsystemrelease =~ /^7/ {
+        if $keytab {
+          service { 'nfs-config':
+            ensure    => 'running',
+            enable    => true,
+            subscribe => File_line['GSSD_OPTIONS'],
+          }
+          file { '/etc/krb5.keytab':
+            ensure => 'symlink',
+            target => '/etc/opt/quest/vas/host.keytab',
+            notify => Service['rpcgssd'],
+          }
+          if $gss {
+            Service['nfs-config'] ~> Service['rpcgssd']
+            Service['rpcbind_service'] -> Service['rpcgssd']
           }
         }
       }
@@ -33,27 +31,25 @@ class nfsclient (
       $gss_line    = 'NFS_SECURITY_GSS'
       $keytab_line = 'GSSD_OPTIONS'
       $service     = 'nfs'
-      case $::operatingsystemrelease {
-        /^11/: {
-          if $gss {
-            file_line { 'NFS_START_SERVICES':
-              match  => '^NFS_START_SERVICES=',
-              path   => '/etc/sysconfig/nfs',
-              line   => 'NFS_START_SERVICES="yes"',
-              notify => [ Service[nfs], Service[rpcbind_service], ],
-            }
-            file_line { 'MODULES_LOADED_ON_BOOT':
-              match  => '^MODULES_LOADED_ON_BOOT=',
-              path   => '/etc/sysconfig/kernel',
-              line   => 'MODULES_LOADED_ON_BOOT="rpcsec_gss_krb5"',
-              notify => Exec[gss-module-modprobe],
-            }
-            exec { 'gss-module-modprobe':
-              command     => 'modprobe rpcsec_gss_krb5',
-              unless      => 'lsmod | egrep "^rpcsec_gss_krb5"',
-              path        => '/sbin:/usr/bin',
-              refreshonly => true,
-            }
+      if $::operatingsystemrelease =~ /^11/ {
+        if $gss {
+          file_line { 'NFS_START_SERVICES':
+            match  => '^NFS_START_SERVICES=',
+            path   => '/etc/sysconfig/nfs',
+            line   => 'NFS_START_SERVICES="yes"',
+            notify => [ Service[nfs], Service[rpcbind_service], ],
+          }
+          file_line { 'MODULES_LOADED_ON_BOOT':
+            match  => '^MODULES_LOADED_ON_BOOT=',
+            path   => '/etc/sysconfig/kernel',
+            line   => 'MODULES_LOADED_ON_BOOT="rpcsec_gss_krb5"',
+            notify => Exec[gss-module-modprobe],
+          }
+          exec { 'gss-module-modprobe':
+            command     => 'modprobe rpcsec_gss_krb5',
+            unless      => 'lsmod | egrep "^rpcsec_gss_krb5"',
+            path        => '/sbin:/usr/bin',
+            refreshonly => true,
           }
         }
       }
