@@ -1,3 +1,4 @@
+# nfsclient
 class nfsclient (
   $gss    = false,
   $keytab = undef,
