@@ -148,6 +148,7 @@ describe 'nfsclient' do
     let :facts do
       {
         'osfamily'                  => 'RedHat',
+        'operatingsystemrelease'    => '6.7',
         'operatingsystemmajrelease' => '6',
       }
     end
