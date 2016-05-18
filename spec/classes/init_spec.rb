@@ -113,7 +113,7 @@ describe 'nfsclient' do
         'enable'  => 'true',
       })
       should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[nfs]')
-      should contain_service('nfs').that_requires('File[idmapd_conf]')
+      is_expected.not_to contain_service('nfs').that_requires('Service[idmapd_service]')
     end
   end
 
@@ -140,7 +140,7 @@ describe 'nfsclient' do
         'enable' => 'true',
       })
       should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[nfs]')
-      should contain_service('nfs').that_requires('File[idmapd_conf]')
+      is_expected.not_to contain_service('nfs').that_requires('Service[idmapd_service]')
     end
   end
 

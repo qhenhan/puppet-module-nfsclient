@@ -6,9 +6,10 @@ class nfsclient (
 
   case $::osfamily {
     'RedHat': {
-      $gss_line    = 'SECURE_NFS'
-      $keytab_line = 'RPCGSSDARGS'
-      $service     = 'rpcgssd'
+      $gss_line     = 'SECURE_NFS'
+      $keytab_line  = 'RPCGSSDARGS'
+      $service      = 'rpcgssd'
+      $nfs_requires = Service['idmapd_service']
       if $::operatingsystemrelease =~ /^7/ {
         if $keytab {
           service { 'nfs-config':
@@ -75,7 +76,10 @@ class nfsclient (
       ensure    => 'running',
       enable    => true,
       subscribe => [ File_line['NFS_SECURITY_GSS'], File_line['GSSD_OPTIONS'], ],
-      require   => Service['idmapd_service'],
+    }
+
+    if $nfs_requires {
+      Service[$service] { require =>  $nfs_requires }
     }
   }
   if $keytab {
