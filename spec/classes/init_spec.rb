@@ -174,24 +174,22 @@ describe 'nfsclient' do
 
     it 'should manage keytab' do
       params.merge!({'gss' => true, 'keytab' => '/etc/keytab'})
-      should contain_file_line('rpc-gss.service').with(
-      {
-        'match' => '^ConditionPathExists=',
-        'line' => 'ConditionPathExists=/etc/keytab',
-      })
-      should contain_exec('daemon-reload').with(
-      {
-        'command' => 'systemctl daemon-reload',
-        'refreshonly' => true,
-      })
-      should contain_exec('nfs-config').with(
-      {
-        'command' => 'systemctl restart nfs-config',
-        'refreshonly' => true,
-      })
-      should contain_file_line('rpc-gss.service').that_notifies('Exec[daemon-reload]')
-      should contain_Service('rpcgssd').that_subscribes_to('Exec[daemon-reload]')
-      should contain_Service('rpcgssd').that_subscribes_to('Exec[nfs-config]')
+
+      should contain_service('nfs-config').with(
+        'ensure' => 'running',
+        'enable' => true
+      )
+      should contain_service('nfs-config').that_subscribes_to('File_line[GSSD_OPTIONS]')
+
+      should contain_file('/etc/krb5.keytab').with(
+        'ensure' => 'symlink',
+        'target' => '/etc/opt/quest/vas/host.keytab'
+      )
+      should contain_file('/etc/krb5.keytab').that_notifies('Service[rpcgssd]')
+
+      is_expected.to contain_service('nfs-config').that_notifies('Service[rpcgssd]')
+      is_expected.to contain_service('rpcbind_service').that_comes_before('Service[rpcgssd]')
+      is_expected.to contain_service('rpcgssd').that_requires('Service[idmapd_service]')
     end
   end
 
