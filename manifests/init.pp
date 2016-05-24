@@ -45,6 +45,9 @@ class nfsclient (
       $gss_line    = 'NFS_SECURITY_GSS'
       $keytab_line = 'GSSD_OPTIONS'
       $service     = 'nfs'
+      # Setting nfs_requires to undef just fixes the code
+      # Someone with better functional knowledge should fix functionality if needed or remove this comment.
+      $nfs_requires = undef
       if $::operatingsystemrelease =~ /^11/ {
         if $gss_real {
           file_line { 'NFS_START_SERVICES':
