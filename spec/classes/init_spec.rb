@@ -10,12 +10,12 @@ describe 'nfsclient' do
 
   let :options do
     {
-      'gss' =>
+      'gss_line' =>
         {
           'RedHat' => 'SECURE_NFS',
           'Suse' => 'NFS_SECURITY_GSS',
         },
-      'keytab' =>
+      'keytab_line' =>
         {
           'RedHat' => 'RPCGSSDARGS',
           'Suse' => 'GSSD_OPTIONS',
@@ -43,8 +43,8 @@ describe 'nfsclient' do
           should contain_file_line('NFS_SECURITY_GSS').with(
           {
             'path' => '/etc/sysconfig/nfs',
-            'line' => "#{options['gss'][facts[:osfamily]]}=\"yes\"",
-            'match' => "^#{options['gss'][facts[:osfamily]]}=.*",
+            'line' => "#{options['gss_line'][facts[:osfamily]]}=\"yes\"",
+            'match' => "^#{options['gss_line'][facts[:osfamily]]}=.*",
           })
           should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcbind_service]')
           should contain_class('rpcbind')
@@ -56,8 +56,8 @@ describe 'nfsclient' do
           should contain_file_line('GSSD_OPTIONS').with(
           {
             'path' => '/etc/sysconfig/nfs',
-            'line' => "#{options['keytab'][facts[:osfamily]]}=\"-k /etc/keytab\"",
-            'match' => "^#{options['keytab'][facts[:osfamily]]}=.*",
+            'line' => "#{options['keytab_line'][facts[:osfamily]]}=\"-k /etc/keytab\"",
+            'match' => "^#{options['keytab_line'][facts[:osfamily]]}=.*",
           })
           should contain_file_line('GSSD_OPTIONS').that_notifies('Service[rpcbind_service]')
         end
