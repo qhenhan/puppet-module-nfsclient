@@ -10,12 +10,12 @@ describe 'nfsclient' do
 
   let :options do
     {
-      'gss' =>
+      'gss_line' =>
         {
           'RedHat' => 'SECURE_NFS',
           'Suse' => 'NFS_SECURITY_GSS',
         },
-      'keytab' =>
+      'keytab_line' =>
         {
           'RedHat' => 'RPCGSSDARGS',
           'Suse' => 'GSSD_OPTIONS',
@@ -43,8 +43,8 @@ describe 'nfsclient' do
           should contain_file_line('NFS_SECURITY_GSS').with(
           {
             'path' => '/etc/sysconfig/nfs',
-            'line' => "#{options['gss'][facts[:osfamily]]}=\"yes\"",
-            'match' => "^#{options['gss'][facts[:osfamily]]}=.*",
+            'line' => "#{options['gss_line'][facts[:osfamily]]}=\"yes\"",
+            'match' => "^#{options['gss_line'][facts[:osfamily]]}=.*",
           })
           should contain_file_line('NFS_SECURITY_GSS').that_notifies('Service[rpcbind_service]')
           should contain_class('rpcbind')
@@ -56,8 +56,8 @@ describe 'nfsclient' do
           should contain_file_line('GSSD_OPTIONS').with(
           {
             'path' => '/etc/sysconfig/nfs',
-            'line' => "#{options['keytab'][facts[:osfamily]]}=\"-k /etc/keytab\"",
-            'match' => "^#{options['keytab'][facts[:osfamily]]}=.*",
+            'line' => "#{options['keytab_line'][facts[:osfamily]]}=\"-k /etc/keytab\"",
+            'match' => "^#{options['keytab_line'][facts[:osfamily]]}=.*",
           })
           should contain_file_line('GSSD_OPTIONS').that_notifies('Service[rpcbind_service]')
         end
@@ -200,4 +200,57 @@ describe 'nfsclient' do
       should compile.and_raise_error(/nfsclient module only supports Suse and RedHat. <UNSUPPORTED> was detected./)
     end
   end
+
+  describe 'variable type and content validations' do
+    # set needed custom facts and variables
+    let(:facts) do
+      {
+        :osfamily                  => 'RedHat',
+        :operatingsystemrelease    => '7.2',
+        :operatingsystemmajrelease => '7',
+      }
+    end
+    let(:mandatory_params) do
+      {
+        #:param => 'value',
+      }
+    end
+
+    validations = {
+      'absolute_path' => {
+        :name    => %w(keytab),
+        :valid   => ['/absolute/filepath','/absolute/directory/'],
+        :invalid => ['string', %w(array), { 'ha' => 'sh' }, 3, 2.42, true, false, nil],
+        :message => 'is not an absolute path',
+      },
+      'boolean_stringified' => {
+        :name    => %w(gss),
+        :valid   => [true, false, 'true', 'false'],
+        :invalid => ['string', %w(array), { 'ha' => 'sh' }, 3, 2.42, nil],
+        :message => 'str2bool',
+      },
+    }
+
+    validations.sort.each do |type, var|
+      var[:name].each do |var_name|
+        var[:params] = {} if var[:params].nil?
+        var[:valid].each do |valid|
+          context "when #{var_name} (#{type}) is set to valid #{valid} (as #{valid.class})" do
+            let(:params) { [mandatory_params, var[:params], { :"#{var_name}" => valid, }].reduce(:merge) }
+            it { should compile }
+          end
+        end
+
+        var[:invalid].each do |invalid|
+          context "when #{var_name} (#{type}) is set to invalid #{invalid} (as #{invalid.class})" do
+            let(:params) { [mandatory_params, var[:params], { :"#{var_name}" => invalid, }].reduce(:merge) }
+            it 'should fail' do
+              expect { should contain_class(subject) }.to raise_error(Puppet::Error, /#{var[:message]}/)
+            end
+          end
+        end
+      end # var[:name].each
+    end # validations.sort.each
+  end # describe 'variable type and content validations'
+
 end
