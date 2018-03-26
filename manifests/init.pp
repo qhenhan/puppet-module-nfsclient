@@ -46,12 +46,12 @@ class nfsclient (
     'Suse': {
       $gss_line    = 'NFS_SECURITY_GSS'
       $keytab_line = 'GSSD_OPTIONS'
-      $service     = 'nfs'
       # Setting nfs_requires to undef just fixes the code
       # Someone with better functional knowledge should fix functionality if needed or remove this comment.
       $nfs_requires = undef
       $nfs_sysconf  = '/etc/sysconfig/nfs'
       if $::operatingsystemrelease =~ /^11/ {
+        $service = 'nfs'
         if $gss_real {
           file_line { 'NFS_START_SERVICES':
             match  => '^NFS_START_SERVICES=',
@@ -70,6 +70,15 @@ class nfsclient (
             unless      => 'lsmod | egrep "^rpcsec_gss_krb5"',
             path        => '/sbin:/usr/bin',
             refreshonly => true,
+          }
+        }
+      }
+      if $::operatingsystemrelease =~ /^12/ {
+        $service = 'rpc-gssd'
+        if $keytab {
+          file { '/etc/krb5.keytab':
+            ensure => 'symlink',
+            target => "${keytab}",
           }
         }
       }
