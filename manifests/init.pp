@@ -81,6 +81,11 @@ class nfsclient (
             target => "${keytab}",
           }
         }
+        if $gss_real {
+          File['/etc/krb5.keytab'] {
+            notify => Service["$service"],
+          }
+        }
       }
     }
     'Debian': {
