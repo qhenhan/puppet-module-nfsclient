@@ -4,9 +4,9 @@
   "author": "emahags",
   "summary": "Manage nfs client",
   "license": "Apache-2.0",
-  "source": "git://github.com/emahags/puppet-module-nfsclient.git",
-  "project_page": "https://github.com/emahags/puppet-module-nfsclient",
-  "issues_url": "https://github.com/emahags/puppet-module-nfsclient/issues",
+  "source": "git://github.com/bosa1/puppet-module-nfsclient.git",
+  "project_page": "https://github.com/bosa1/puppet-module-nfsclient",
+  "issues_url": "https://github.com/bosa1/puppet-module-nfsclient/issues",
   "description": "Manage nfs client",
   "requirements": [
     {
