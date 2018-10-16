@@ -91,14 +91,17 @@ class nfsclient (
     'Debian': {
       $gss_line     = 'NEED_GSSD'
       $keytab_line  = 'GSSDARGS'
-      $service      = 'gssd'
       $nfs_requires = undef
       $nfs_sysconf  = '/etc/default/nfs-common'
-      # Puppet 3.x Incorrectly defaults to upstart for Ubuntu 16.x
-      if $::lsbmajdistrelease == 16 and $::lsbdistid == 'Ubuntu' {
+      # Puppet 3.x Incorrectly defaults to upstart for Ubuntu 16.x and 18.x
+      if $::operatingsystemrelease =~ /16.04|18.04/ and $::operatingsystem == 'Ubuntu' {
+        $service = 'rpc-gssd'
         Service {
           provider => 'systemd',
         }
+      }
+      else {
+        $service = 'gssd'
       }
       if $keytab {
         file { '/etc/krb5.keytab':
