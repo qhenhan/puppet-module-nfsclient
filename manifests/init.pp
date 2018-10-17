@@ -95,7 +95,7 @@ class nfsclient (
       $nfs_requires = undef
       $nfs_sysconf  = '/etc/default/nfs-common'
       # Puppet 3.x Incorrectly defaults to upstart for Ubuntu 16.x
-      if $::lsbmajdistrelease == 16 and $::lsbdistid == 'Ubuntu' {
+      if $::lsbmajdistrelease == '16' and $::lsbdistid == 'Ubuntu' {
         Service {
           provider => 'systemd',
         }
