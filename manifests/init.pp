@@ -16,7 +16,7 @@ class nfsclient (
 
   case $::osfamily {
     'RedHat': {
-      include nfs::idmap
+      include ::nfs::idmap
       $gss_line     = 'SECURE_NFS'
       $keytab_line  = 'RPCGSSDARGS'
       $service      = 'rpcgssd'
@@ -118,7 +118,7 @@ class nfsclient (
   }
 
   if $gss_real {
-    include rpcbind
+    include ::rpcbind
 
     file_line { 'NFS_SECURITY_GSS':
       path   => "${nfs_sysconf}",
