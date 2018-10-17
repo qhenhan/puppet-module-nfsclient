@@ -1,7 +1,7 @@
 {
-  "name": "puppet-module-nfsclient",
+  "name": "kodguru-nfsclient",
   "version": "0.4.0",
-  "author": "emahags",
+  "author": "kodguru",
   "summary": "Manage nfs client",
   "license": "Apache-2.0",
   "source": "git://github.com/kodguru/puppet-module-nfsclient.git",
@@ -9,10 +9,6 @@
   "issues_url": "https://github.com/kodguru/puppet-module-nfsclient/issues",
   "description": "Manage nfs client",
   "requirements": [
-    {
-      "name": "pe",
-      "version_requirement": ">= 3.0.0 < 5.0.0"
-    },
     {
       "name": "puppet",
       "version_requirement": ">= 3.0.0 < 5.0.0"
@@ -54,7 +50,7 @@
     },
     {
       "name": "ghoneycutt/rpcbind",
-      "version_requirement": ">= 1.4.0"
+      "version_requirement": ">= 1.7.0"
     },
     {
       "name": "ghoneycutt/nfs",

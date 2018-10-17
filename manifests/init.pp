@@ -16,7 +16,7 @@ class nfsclient (
 
   case $::osfamily {
     'RedHat': {
-      include nfs::idmap
+      include ::nfs::idmap
       $gss_line     = 'SECURE_NFS'
       $keytab_line  = 'RPCGSSDARGS'
       $service      = 'rpcgssd'
@@ -31,7 +31,7 @@ class nfsclient (
           }
           file { '/etc/krb5.keytab':
             ensure => 'symlink',
-            target => "${keytab}",
+            target => $keytab,
           }
           if $gss_real {
             Service['nfs-config'] ~> Service['rpcgssd']
@@ -78,12 +78,12 @@ class nfsclient (
         if $keytab {
           file { '/etc/krb5.keytab':
             ensure => 'symlink',
-            target => "${keytab}",
+            target => $keytab,
           }
-        }
-        if $gss_real {
-          File['/etc/krb5.keytab'] {
-            notify => Service["$service"],
+          if $gss_real {
+            File['/etc/krb5.keytab'] {
+              notify => Service[$service],
+            }
           }
         }
       }
@@ -106,11 +106,11 @@ class nfsclient (
       if $keytab {
         file { '/etc/krb5.keytab':
           ensure => 'symlink',
-          target => "${keytab}",
+          target => $keytab,
         }
         if $gss_real {
           File['/etc/krb5.keytab'] {
-            notify => Service["$service"],
+            notify => Service[$service],
           }
         }
       }
@@ -121,10 +121,10 @@ class nfsclient (
   }
 
   if $gss_real {
-    include rpcbind
+    include ::rpcbind
 
     file_line { 'NFS_SECURITY_GSS':
-      path   => "${nfs_sysconf}",
+      path   => $nfs_sysconf,
       line   => "${gss_line}=\"yes\"",
       match  => "^${gss_line}=.*",
       notify => Service[rpcbind_service],
@@ -142,7 +142,7 @@ class nfsclient (
   }
   if $keytab {
     file_line { 'GSSD_OPTIONS':
-      path  => "${nfs_sysconf}",
+      path  => $nfs_sysconf,
       line  => "${keytab_line}=\"-k ${keytab}\"",
       match => "^${keytab_line}=.*",
     }
