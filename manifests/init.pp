@@ -80,10 +80,10 @@ class nfsclient (
             ensure => 'symlink',
             target => "${keytab}",
           }
-        }
-        if $gss_real {
-          File['/etc/krb5.keytab'] {
-            notify => Service["$service"],
+          if $gss_real {
+            File['/etc/krb5.keytab'] {
+              notify => Service["$service"],
+            }
           }
         }
       }
